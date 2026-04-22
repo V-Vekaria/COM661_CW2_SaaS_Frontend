@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth';
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
-export class NavbarComponent {
+export class Navbar {
 
   constructor(public authService: AuthService) { }
 
