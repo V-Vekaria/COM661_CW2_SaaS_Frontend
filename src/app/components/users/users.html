@@ -191,19 +191,22 @@
 
     <!-- pagination -->
     <div class="row mt-3">
-      <div class="col-md-12 text-center">
+    <div class="col-md-12 text-center">
         <button class="btn btn-outline-dark me-2"
-          (click)="previousPage()"
-          [disabled]="page === 1">
-          Previous
+        (click)="previousPage()"
+        [disabled]="page === 1">
+        Previous
         </button>
-        <span class="mx-3">Page {{ page }}</span>
+        <span class="mx-3">
+        Page {{ page }} of {{ totalPages() }}
+        ({{ total }} users total)
+        </span>
         <button class="btn btn-outline-dark"
-          (click)="nextPage()"
-          [disabled]="user_list.length < pageSize">
-          Next
+        (click)="nextPage()"
+        [disabled]="page >= totalPages()">
+        Next
         </button>
-      </div>
+    </div>
     </div>
   } @else {
     <div class="alert alert-warning">

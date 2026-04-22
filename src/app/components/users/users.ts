@@ -14,6 +14,7 @@ import { AuthService } from '../../services/auth';
 export class Users {
 
   user_list: any[] = [];
+  total: number = 0;
   page: number = 1;
   pageSize: number = 10;
   searchFirstName: string = '';
@@ -44,7 +45,8 @@ export class Users {
   loadUsers() {
     this.webService.getUsers(this.page, this.pageSize).subscribe(
       (response) => {
-        this.user_list = response;
+        this.user_list = response.users;
+        this.total = response.total;
       },
       (error) => {
         this.errorMessage = 'Failed to load users';
@@ -52,8 +54,12 @@ export class Users {
     );
   }
 
+  totalPages() {
+    return Math.ceil(this.total / this.pageSize);
+  }
+
   nextPage() {
-    if (this.user_list.length === this.pageSize) {
+    if (this.page < this.totalPages()) {
       this.page = this.page + 1;
       this.loadUsers();
     }
@@ -77,6 +83,7 @@ export class Users {
     ).subscribe(
       (response) => {
         this.user_list = response;
+        this.total = response.length;
       },
       (error) => {
         this.user_list = [];
@@ -115,17 +122,12 @@ export class Users {
   onAddUser() {
     if (this.addUserForm.valid) {
       const newUser = {
-        profile: {
-          first_name: this.addUserForm.value.first_name,
-          last_name: this.addUserForm.value.last_name,
-          email: this.addUserForm.value.email,
-          role: this.addUserForm.value.role
-        },
-        subscription: {
-          tier: this.addUserForm.value.tier,
-          status: 'active'
-        },
-        password: this.addUserForm.value.password
+        first_name: this.addUserForm.value.first_name,
+        last_name: this.addUserForm.value.last_name,
+        email: this.addUserForm.value.email,
+        password: this.addUserForm.value.password,
+        role: this.addUserForm.value.role,
+        subscription_tier: this.addUserForm.value.tier
       };
 
       this.webService.addUser(newUser).subscribe(
@@ -138,7 +140,11 @@ export class Users {
           }, 1500);
         },
         (error) => {
-          this.addError = 'Failed to add user — email may already exist';
+          if (error.status === 409) {
+            this.addError = 'Email already exists';
+          } else {
+            this.addError = 'Failed to add user';
+          }
         }
       );
     }
