@@ -1,1 +1,214 @@
-<p>users works!</p>
+<div class="container mt-4">
+
+  <div class="row mb-3">
+    <div class="col-md-8">
+      <h2>Users</h2>
+    </div>
+    <div class="col-md-4 text-end">
+      @if (authService.isAdmin()) {
+        <button class="btn btn-dark"
+          (click)="toggleAddForm()">
+          @if (showAddForm) {
+            Cancel
+          } @else {
+            + Add User
+          }
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- add user form -->
+  @if (showAddForm) {
+    <div class="card mb-4">
+      <div class="card-header bg-dark text-white">
+        Add New User
+      </div>
+      <div class="card-body">
+
+        @if (addSuccess) {
+          <div class="alert alert-success">
+            {{ addSuccess }}
+          </div>
+        }
+        @if (addError) {
+          <div class="alert alert-danger">
+            {{ addError }}
+          </div>
+        }
+
+        <form [formGroup]="addUserForm" (ngSubmit)="onAddUser()">
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">First Name</label>
+              <input type="text"
+                class="form-control"
+                formControlName="first_name">
+              @if (addUserForm.controls['first_name'].invalid &&
+                   addUserForm.controls['first_name'].touched) {
+                <small class="text-danger">
+                  First name is required
+                </small>
+              }
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Last Name</label>
+              <input type="text"
+                class="form-control"
+                formControlName="last_name">
+              @if (addUserForm.controls['last_name'].invalid &&
+                   addUserForm.controls['last_name'].touched) {
+                <small class="text-danger">
+                  Last name is required
+                </small>
+              }
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email"
+              class="form-control"
+              formControlName="email">
+            @if (addUserForm.controls['email'].invalid &&
+                 addUserForm.controls['email'].touched) {
+              <small class="text-danger">
+                Valid email required
+              </small>
+            }
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password"
+              class="form-control"
+              formControlName="password">
+            @if (addUserForm.controls['password'].invalid &&
+                 addUserForm.controls['password'].touched) {
+              <small class="text-danger">
+                Password must be at least 6 characters
+              </small>
+            }
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Role</label>
+              <select class="form-select" formControlName="role">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Subscription Tier</label>
+              <select class="form-select" formControlName="tier">
+                <option value="free">Free</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit"
+            class="btn btn-dark"
+            [disabled]="addUserForm.invalid">
+            Create User
+          </button>
+
+        </form>
+
+      </div>
+    </div>
+  }
+
+  <!-- search bar -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-4">
+          <input type="text"
+            class="form-control"
+            placeholder="Search first name"
+            [(ngModel)]="searchFirstName">
+        </div>
+        <div class="col-md-4">
+          <input type="text"
+            class="form-control"
+            placeholder="Search last name"
+            [(ngModel)]="searchLastName">
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-dark me-2"
+            (click)="searchByName()">
+            Search
+          </button>
+          <button class="btn btn-secondary"
+            (click)="clearSearch()">
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- users list -->
+  @if (user_list.length > 0) {
+    <div class="row">
+      @for (user of user_list; track user._id) {
+        <div class="col-md-6 mb-3">
+          <div class="card">
+            <div class="card-header bg-dark text-white">
+              {{ user.profile?.first_name }} {{ user.profile?.last_name }}
+            </div>
+            <div class="card-body">
+              <p class="mb-1">
+                <strong>Email:</strong> {{ user.profile?.email }}
+              </p>
+              <p class="mb-1">
+                <strong>Role:</strong> {{ user.profile?.role }}
+              </p>
+              <p class="mb-1">
+                <strong>Tier:</strong> {{ user.subscription?.tier }}
+              </p>
+            </div>
+            <div class="card-footer">
+              <a [routerLink]="['/users', user._id]"
+                class="btn btn-sm btn-primary me-2">
+                View
+              </a>
+              @if (authService.isAdmin()) {
+                <button class="btn btn-sm btn-danger"
+                  (click)="deleteUser(user._id)">
+                  Delete
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- pagination -->
+    <div class="row mt-3">
+      <div class="col-md-12 text-center">
+        <button class="btn btn-outline-dark me-2"
+          (click)="previousPage()"
+          [disabled]="page === 1">
+          Previous
+        </button>
+        <span class="mx-3">Page {{ page }}</span>
+        <button class="btn btn-outline-dark"
+          (click)="nextPage()"
+          [disabled]="user_list.length < pageSize">
+          Next
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="alert alert-warning">
+      No users found
+    </div>
+  }
+
+</div>
