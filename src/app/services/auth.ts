@@ -10,17 +10,17 @@ export class AuthService {
   constructor(private webService: WebService, 
     private router: Router) { }
   login(email: string, password: string) {
-    this.webService.login(email, password).subscribe({
-      next: (response) => {
+    return this.webService.login(email, password).subscribe(
+      (response) => {
         localStorage.setItem('token', response.token);
         localStorage.setItem('role', response.role);
         localStorage.setItem('email', response.email);
         this.router.navigate(['/users']);
       },
-      error: (error) => {
+      (error) => {
         console.log(error);
       }
-    });
+    )
   }
 
   logout() {
