@@ -1,1 +1,69 @@
-<p>navbar works!</p>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+
+    <a class="navbar-brand" routerLink="/users">
+      SaaS Monitor
+    </a>
+
+    <button class="navbar-toggler" type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+
+        @if (authService.isLoggedIn()) {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/users"
+              routerLinkActive="active">
+              Users
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/activity-logs"
+              routerLinkActive="active">
+              Activity Logs
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/anomaly-flags"
+              routerLinkActive="active">
+              Anomaly Flags
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/analytics"
+              routerLinkActive="active">
+              Analytics
+            </a>
+          </li>
+        }
+
+      </ul>
+
+      <ul class="navbar-nav ms-auto">
+        @if (authService.isLoggedIn()) {
+          <li class="nav-item">
+            <span class="nav-link text-light">
+              {{ authService.getEmail() }}
+            </span>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" (click)="logout()">
+              Logout
+            </a>
+          </li>
+        } @else {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/login">
+              Login
+            </a>
+          </li>
+        }
+      </ul>
+
+    </div>
+  </div>
+</nav>
