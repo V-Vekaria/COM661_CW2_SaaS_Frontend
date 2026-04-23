@@ -156,7 +156,7 @@
   @if (user_list.length > 0) {
     <div class="row">
       @for (user of user_list; track user._id) {
-        <div class="col-md-6 mb-3">
+        <div class="col-md-12 mb-3">
           <div class="card">
             <div class="card-header bg-dark text-white">
               {{ user.profile?.first_name }} {{ user.profile?.last_name }}
