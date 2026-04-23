@@ -37,7 +37,7 @@ export class Users {
       last_name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      role: ['user', Validators.required],
+      role: ['analyst', Validators.required],
       tier: ['free', Validators.required]
     });
   }
@@ -116,7 +116,7 @@ export class Users {
     this.showAddForm = !this.showAddForm;
     this.addError = '';
     this.addSuccess = '';
-    this.addUserForm.reset({ role: 'user', tier: 'free' });
+    this.addUserForm.reset({ role: 'analyst', tier: 'free' });
   }
 
   onAddUser() {
