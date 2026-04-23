@@ -51,7 +51,7 @@
           <canvas baseChart
             [data]="pieChartData"
             [options]="pieChartOptions"
-            [type]="pieChartType">
+            type="pie">
           </canvas>
         </div>
       </div>
@@ -63,7 +63,7 @@
           <canvas baseChart
             [data]="barChartData"
             [options]="barChartOptions"
-            [type]="barChartType">
+            type="bar">
           </canvas>
         </div>
       </div>
@@ -86,7 +86,7 @@
         <table class="table table-sm mb-0">
           <thead>
             <tr>
-              <th>Type</th>
+              <th>Category</th>
               <th>Severity</th>
               <th>Status</th>
               <th>Detected</th>
@@ -96,22 +96,28 @@
           <tbody>
             @for (a of recentAnomalies; track a._id) {
               <tr>
-                <td>{{ a.anomaly_type || a.type }}</td>
+                <td>{{ a.category }}</td>
                 <td>
                   <span class="badge bg-secondary">
                     {{ a.severity }}
                   </span>
                 </td>
-                <td>{{ a.status }}</td>
-                <td>{{ a.detected_at || a.created_at }}</td>
                 <td>
-                  @if (a.status !== 'resolved') {
+                  @if (a.resolved) {
+                    <span class="badge bg-success">Resolved</span>
+                  } @else {
+                    <span class="badge bg-warning text-dark">Open</span>
+                  }
+                </td>
+                <td>{{ a.detected_at }}</td>
+                <td>
+                  @if (!a.resolved) {
                     <button class="btn btn-sm btn-success"
                       (click)="quickResolve(a._id)">
                       Resolve
                     </button>
                   } @else {
-                    <span class="text-muted">Resolved</span>
+                    <span class="text-muted">—</span>
                   }
                 </td>
               </tr>

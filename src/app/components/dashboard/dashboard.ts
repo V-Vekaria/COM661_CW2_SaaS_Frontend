@@ -24,7 +24,6 @@ export class Dashboard {
   errorMessage: string = '';
 
   // Pie chart — users by tier
-  pieChartType = 'pie' as const;
   pieChartData: ChartData<'pie'> = {
     labels: ['Free', 'Pro', 'Enterprise'],
     datasets: [{
@@ -39,7 +38,6 @@ export class Dashboard {
   };
 
   // Bar chart — anomalies by severity
-  barChartType = 'bar' as const;
   barChartData: ChartData<'bar'> = {
     labels: ['Critical', 'High', 'Medium', 'Low'],
     datasets: [{
@@ -66,9 +64,8 @@ export class Dashboard {
   loadUsers() {
     this.webService.getUsers(1, 100).subscribe(
       (response) => {
-        const users = response.users || response;
-        this.totalUsers = response.total || users.length;
-        this.buildTierChart(users);
+        this.totalUsers = response.total;
+        this.buildTierChart(response.users);
       },
       (error) => {
         this.errorMessage = 'Failed to load users';
@@ -79,12 +76,10 @@ export class Dashboard {
   loadAnomalies() {
     this.webService.getAnomalyFlags(1, 100).subscribe(
       (response) => {
-        const anomalies = response.anomaly_flags || response.flags || response;
-        this.activeAnomalies = anomalies.filter(
-          (a: any) => a.status !== 'resolved'
-        ).length;
-        this.recentAnomalies = anomalies.slice(0, 5);
-        this.buildSeverityChart(anomalies);
+        const flags = response.flags;
+        this.activeAnomalies = flags.filter((a: any) => !a.resolved).length;
+        this.recentAnomalies = flags.slice(0, 5);
+        this.buildSeverityChart(flags);
       },
       (error) => {
         this.errorMessage = 'Failed to load anomalies';
@@ -95,12 +90,12 @@ export class Dashboard {
   loadActivity() {
     this.webService.getActivityLogs(1, 100).subscribe(
       (response) => {
-        const logs = response.activity_logs || response.logs || response;
-        this.totalApiCalls = response.total || logs.length;
+        const logs = response.logs;
+        this.totalApiCalls = response.total;
         if (logs.length > 0) {
           let sum = 0;
           for (let log of logs) {
-            sum = sum + (log.response_time_ms || 0);
+            sum = sum + (log.performance?.response_time_ms || 0);
           }
           this.avgResponseTime = Math.round(sum / logs.length);
         }
@@ -114,7 +109,7 @@ export class Dashboard {
   buildTierChart(users: any[]) {
     const tiers: any = { free: 0, pro: 0, enterprise: 0 };
     for (let u of users) {
-      const tier = u.subscription_tier || 'free';
+      const tier = u.subscription?.tier || 'free';
       if (tiers[tier] !== undefined) {
         tiers[tier]++;
       }
@@ -128,9 +123,9 @@ export class Dashboard {
     };
   }
 
-  buildSeverityChart(anomalies: any[]) {
+  buildSeverityChart(flags: any[]) {
     const sev: any = { critical: 0, high: 0, medium: 0, low: 0 };
-    for (let a of anomalies) {
+    for (let a of flags) {
       const s = (a.severity || 'low').toLowerCase();
       if (sev[s] !== undefined) {
         sev[s]++;
