@@ -20,6 +20,12 @@ export class LoginComponent {
               private router: Router) { }
 
   ngOnInit() {
+    // If already logged in, skip the login page
+    if (localStorage.getItem('token')) {
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
@@ -36,7 +42,7 @@ export class LoginComponent {
           localStorage.setItem('token', response.token);
           localStorage.setItem('role', response.role);
           localStorage.setItem('email', response.email);
-          this.router.navigate(['/users']);
+          this.router.navigate(['/dashboard']);
         },
         (error: any) => {
           this.errorMessage = 'Invalid email or password';

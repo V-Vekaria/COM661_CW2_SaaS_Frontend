@@ -15,7 +15,7 @@ export class AuthService {
         localStorage.setItem('token', response.token);
         localStorage.setItem('role', response.role);
         localStorage.setItem('email', response.email);
-        this.router.navigate(['/users']);
+        this.router.navigate(['/dashboard']);
       },
       (error) => {
         console.log(error);
