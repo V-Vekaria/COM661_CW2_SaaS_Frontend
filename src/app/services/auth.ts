@@ -7,8 +7,9 @@ import { Router } from "@angular/router";
 })
 export class AuthService {
 
-  constructor(private webService: WebService, 
-    private router: Router) { }
+  constructor(private webService: WebService,
+              private router: Router) { }
+
   login(email: string, password: string) {
     return this.webService.login(email, password).subscribe(
       (response) => {
@@ -34,8 +35,32 @@ export class AuthService {
     return localStorage.getItem('token') !== null;
   }
 
+  getRole(): string | null {
+    return localStorage.getItem('role');
+  }
+
   isAdmin(): boolean {
-    return localStorage.getItem('role') === 'admin';
+    return this.getRole() === 'admin';
+  }
+
+  isModerator(): boolean {
+    return this.getRole() === 'moderator';
+  }
+
+  isAnalyst(): boolean {
+    return this.getRole() === 'analyst';
+  }
+
+  canViewUsers(): boolean {
+    return this.isAdmin() || this.isModerator();
+  }
+
+  canViewAnomalies(): boolean {
+    return this.isAdmin() || this.isModerator();
+  }
+
+  canViewAnalytics(): boolean {
+    return this.isAdmin() || this.isAnalyst();
   }
 
   getEmail(): string | null {
