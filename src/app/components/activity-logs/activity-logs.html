@@ -1,1 +1,156 @@
-<p>activity-logs works!</p>
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Activity Logs</h2>
+    <span class="badge bg-secondary fs-6">{{ total }} total</span>
+  </div>
+
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+
+  <!-- filters -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small">Action Type</label>
+          <select class="form-select form-select-sm" [(ngModel)]="filterAction">
+            <option value="">All</option>
+            <option value="login">login</option>
+            <option value="logout">logout</option>
+            <option value="create">create</option>
+            <option value="update">update</option>
+            <option value="delete">delete</option>
+            <option value="download">download</option>
+            <option value="password_reset">password_reset</option>
+            <option value="api_key_generate">api_key_generate</option>
+            <option value="settings_update">settings_update</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small">Region</label>
+          <select class="form-select form-select-sm" [(ngModel)]="filterRegion">
+            <option value="">All</option>
+            <option value="eu-west">eu-west</option>
+            <option value="us-east">us-east</option>
+            <option value="us-west">us-west</option>
+            <option value="ap-southeast">ap-southeast</option>
+            <option value="ap-northeast">ap-northeast</option>
+            <option value="sa-east">sa-east</option>
+            <option value="af-south">af-south</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small">Status Code</label>
+          <input type="number" class="form-control form-control-sm"
+            placeholder="e.g. 200"
+            [(ngModel)]="filterStatus">
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+          <button class="btn btn-sm btn-dark flex-fill" (click)="applyFilters()">
+            Filter
+          </button>
+          <button class="btn btn-sm btn-secondary flex-fill" (click)="clearFilters()">
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- table -->
+  @if (logs.length > 0) {
+    <div class="card mb-3">
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Region</th>
+              <th>Device</th>
+              <th>Status</th>
+              <th>Response (ms)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of logs; track log._id) {
+              <tr [class.table-active]="selectedLog?._id === log._id"
+                  style="cursor:pointer" (click)="viewLog(log)">
+                <td>{{ log.timestamp | slice:0:19 }}</td>
+                <td>
+                  <small>{{ log.user_email || log.user_id }}</small>
+                </td>
+                <td>
+                  <span class="badge bg-dark">{{ log.action_type }}</span>
+                </td>
+                <td>{{ log.network?.region }}</td>
+                <td>{{ log.network?.device_type }}</td>
+                <td>
+                  <span class="badge" [class]="'bg-' + statusClass(log.performance?.status_code)">
+                    {{ log.performance?.status_code }}
+                  </span>
+                </td>
+                <td>{{ log.performance?.response_time_ms }}</td>
+                <td>
+                  @if (authService.isAdmin()) {
+                    <button class="btn btn-sm btn-outline-danger"
+                      (click)="$event.stopPropagation(); deleteLog(log._id)">
+                      &times;
+                    </button>
+                  }
+                </td>
+              </tr>
+
+              <!-- inline detail row -->
+              @if (selectedLog?._id === log._id) {
+                <tr class="table-light">
+                  <td colspan="8">
+                    <div class="p-2">
+                      <div class="row">
+                        <div class="col-md-4">
+                          <strong>Session ID:</strong> {{ log.session_id }}<br>
+                          <strong>IP:</strong> {{ log.network?.ip_address }}<br>
+                          <strong>Endpoint:</strong> {{ log.endpoint }}
+                        </div>
+                        <div class="col-md-4">
+                          <strong>Bytes:</strong> {{ log.performance?.bytes_transferred }}<br>
+                          <strong>Coordinates:</strong>
+                          {{ log.network?.location?.coordinates }}
+                        </div>
+                        <div class="col-md-4">
+                          <strong>Log ID:</strong><br>
+                          <code>{{ log._id }}</code>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- pagination -->
+    <div class="d-flex justify-content-center align-items-center gap-3">
+      <button class="btn btn-outline-dark btn-sm"
+        (click)="prevPage()" [disabled]="page === 1">
+        &laquo; Prev
+      </button>
+      <span>Page {{ page }} of {{ totalPages() }}</span>
+      <button class="btn btn-outline-dark btn-sm"
+        (click)="nextPage()" [disabled]="page >= totalPages()">
+        Next &raquo;
+      </button>
+    </div>
+
+  } @else {
+    <div class="alert alert-warning">No logs found for current filters.</div>
+  }
+
+</div>

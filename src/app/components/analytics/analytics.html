@@ -90,12 +90,12 @@
         <div class="card-body p-0">
           @if (highUsageUsers.length > 0) {
             <table class="table table-sm table-hover mb-0">
-              <thead><tr><th>User ID</th><th>Total API Calls</th></tr></thead>
+              <thead><tr><th>Email</th><th>Max API Calls</th></tr></thead>
               <tbody>
                 @for (u of highUsageUsers; track u._id) {
                   <tr>
-                    <td><code>{{ u._id }}</code></td>
-                    <td>{{ u.total_api_calls }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.max_calls }}</td>
                   </tr>
                 }
               </tbody>

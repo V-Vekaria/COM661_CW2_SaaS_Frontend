@@ -82,8 +82,8 @@ export class Users {
       this.searchLastName
     ).subscribe(
       (response) => {
-        this.user_list = response;
-        this.total = response.length;
+        this.user_list = response.users || response;
+        this.total = response.count || response.length || 0;
       },
       (error) => {
         this.user_list = [];

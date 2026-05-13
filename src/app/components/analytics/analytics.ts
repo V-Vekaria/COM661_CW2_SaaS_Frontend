@@ -95,14 +95,14 @@ export class Analytics implements OnInit {
 
   loadHighUsage() {
     this.webService.getHighUsage().subscribe({
-      next: (data: any[]) => { this.highUsageUsers = data; },
+      next: (data: any) => { this.highUsageUsers = data.results || data; },
       error: () => {}
     });
   }
 
   loadFailedLogins() {
     this.webService.getFailedLogins().subscribe({
-      next: (data: any[]) => { this.failedLogins = data; },
+      next: (data: any) => { this.failedLogins = data.flagged_users || data; },
       error: () => {}
     });
   }
@@ -112,14 +112,14 @@ export class Analytics implements OnInit {
       next: (data: any) => {
         const isArray = Array.isArray(data);
         const get = (key: string) => isArray
-          ? (data.find((d: any) => d._id === key)?.count ?? 0)
+          ? (data.find((d: any) => (d.severity ?? d._id) === key)?.count ?? 0)
           : (data[key] ?? 0);
 
         this.anomalyChartData = {
-          labels: ['Low', 'Medium', 'High'],
+          labels: ['Low', 'Medium', 'High', 'Critical'],
           datasets: [{
-            data: [get('low'), get('medium'), get('high')],
-            backgroundColor: ['#198754', '#ffc107', '#dc3545']
+            data: [get('low'), get('medium'), get('high'), get('critical')],
+            backgroundColor: ['#198754', '#ffc107', '#fd7e14', '#dc3545']
           }]
         };
       },

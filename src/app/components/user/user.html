@@ -1,1 +1,285 @@
-<p>user works!</p>
+<div class="container mt-4">
+
+  <!-- back -->
+  <a routerLink="/users" class="btn btn-sm btn-outline-secondary mb-3">
+    &larr; Back to Users
+  </a>
+
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert alert-success">{{ successMessage }}</div>
+  }
+
+  @if (userData) {
+
+    <!-- profile card -->
+    <div class="card mb-4">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span>
+          {{ userData.profile?.first_name }} {{ userData.profile?.last_name }}
+        </span>
+        @if (authService.isAdmin()) {
+          <button class="btn btn-sm btn-outline-light" (click)="toggleEditForm()">
+            {{ showEditForm ? 'Cancel' : 'Edit' }}
+          </button>
+        }
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Email:</strong> {{ userData.profile?.email }}</p>
+            <p><strong>Role:</strong> {{ userData.profile?.role }}</p>
+            <p><strong>Created:</strong> {{ userData.profile?.created_at }}</p>
+            <p><strong>Last Login:</strong> {{ userData.profile?.last_login }}</p>
+          </div>
+          <div class="col-md-6">
+            <p>
+              <strong>Tier:</strong>
+              <span class="badge bg-primary ms-1">{{ userData.subscription?.tier }}</span>
+            </p>
+            <p>
+              <strong>Status:</strong>
+              <span class="badge ms-1"
+                [class.bg-success]="userData.subscription?.status === 'active'"
+                [class.bg-secondary]="userData.subscription?.status !== 'active'">
+                {{ userData.subscription?.status }}
+              </span>
+            </p>
+            <p>
+              <strong>Churn Risk:</strong>
+              <span class="badge ms-1" [class]="'bg-' + churnClass(userData.metadata?.churn_risk)">
+                {{ userData.metadata?.churn_risk }}
+              </span>
+            </p>
+            <p><strong>Industry:</strong> {{ userData.metadata?.industry }}</p>
+          </div>
+        </div>
+
+        <!-- edit form -->
+        @if (showEditForm) {
+          <hr>
+          <form [formGroup]="editForm" (ngSubmit)="onSaveUser()">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Subscription Tier</label>
+                <select class="form-select" formControlName="subscription_tier">
+                  <option value="free">Free</option>
+                  <option value="pro">Pro</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" formControlName="status">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Churn Risk</label>
+                <select class="form-select" formControlName="churn_risk">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-dark" [disabled]="editForm.invalid">
+              Save Changes
+            </button>
+          </form>
+        }
+
+      </div>
+    </div>
+
+    <!-- usage logs -->
+    <div class="card mb-4">
+      <div class="card-header bg-dark text-white">
+        Usage Logs
+        <span class="badge bg-secondary ms-2">{{ usageTotal }}</span>
+      </div>
+      <div class="card-body p-0">
+        @if (usageLogs.length > 0) {
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>API Calls</th>
+                <th>Storage (MB)</th>
+                <th>Region</th>
+                <th>Method</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (log of usageLogs; track log._id) {
+                <tr>
+                  <td>{{ log.timestamp }}</td>
+                  <td>{{ log.metrics?.api_calls }}</td>
+                  <td>{{ log.metrics?.storage_mb }}</td>
+                  <td>{{ log.request?.region }}</td>
+                  <td><code>{{ log.request?.method }}</code></td>
+                  <td>
+                    <span class="badge"
+                      [class.bg-success]="log.request?.status_code < 300"
+                      [class.bg-warning]="log.request?.status_code >= 300 && log.request?.status_code < 500"
+                      [class.bg-danger]="log.request?.status_code >= 500">
+                      {{ log.request?.status_code }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <!-- pagination -->
+          <div class="d-flex justify-content-center align-items-center py-2 gap-3">
+            <button class="btn btn-sm btn-outline-dark"
+              (click)="prevUsagePage()" [disabled]="usagePage === 1">
+              &laquo; Prev
+            </button>
+            <small>Page {{ usagePage }} of {{ usageTotalPages() }}</small>
+            <button class="btn btn-sm btn-outline-dark"
+              (click)="nextUsagePage()" [disabled]="usagePage >= usageTotalPages()">
+              Next &raquo;
+            </button>
+          </div>
+        } @else {
+          <p class="p-3 mb-0 text-muted">No usage logs found.</p>
+        }
+      </div>
+    </div>
+
+    <!-- api keys -->
+    <div class="card mb-4">
+      <div class="card-header bg-dark text-white">
+        API Keys
+        <span class="badge bg-secondary ms-2">{{ apiKeys.length }}</span>
+      </div>
+      <div class="card-body p-0">
+        @if (apiKeys.length > 0) {
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Key Prefix</th>
+                <th>Permissions</th>
+                <th>Last Used</th>
+                <th>Status</th>
+                @if (authService.isAdmin()) {
+                  <th>Actions</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (key of apiKeys; track key._id) {
+                <tr>
+                  <td><code>{{ key.key_prefix }}</code></td>
+                  <td>
+                    @for (p of key.permissions; track p) {
+                      <span class="badge bg-info text-dark me-1">{{ p }}</span>
+                    }
+                  </td>
+                  <td>{{ key.last_used }}</td>
+                  <td>
+                    @if (key.revoked) {
+                      <span class="badge bg-danger">Revoked</span>
+                    } @else {
+                      <span class="badge bg-success">Active</span>
+                    }
+                  </td>
+                  @if (authService.isAdmin()) {
+                    <td>
+                      @if (!key.revoked) {
+                        <button class="btn btn-sm btn-warning me-1"
+                          (click)="revokeKey(key._id)">
+                          Revoke
+                        </button>
+                      }
+                      <button class="btn btn-sm btn-danger"
+                        (click)="deleteKey(key._id)">
+                        Delete
+                      </button>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="p-3 mb-0 text-muted">No API keys found.</p>
+        }
+      </div>
+    </div>
+
+    <!-- alerts -->
+    <div class="card mb-4">
+      <div class="card-header bg-dark text-white">
+        Alerts
+        <span class="badge bg-secondary ms-2">{{ alerts.length }}</span>
+      </div>
+      <div class="card-body p-0">
+        @if (alerts.length > 0) {
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Message</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Triggered</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (alert of alerts; track alert._id) {
+                <tr>
+                  <td>{{ alert.message }}</td>
+                  <td>{{ alert.alert_type }}</td>
+                  <td>
+                    <span class="badge" [class]="'bg-' + severityClass(alert.severity)">
+                      {{ alert.severity }}
+                    </span>
+                  </td>
+                  <td>{{ alert.triggered_at }}</td>
+                  <td>
+                    @if (alert.acknowledged) {
+                      <span class="badge bg-success">Acknowledged</span>
+                    } @else {
+                      <span class="badge bg-warning text-dark">Open</span>
+                    }
+                  </td>
+                  <td>
+                    @if (!alert.acknowledged) {
+                      <button class="btn btn-sm btn-success me-1"
+                        (click)="acknowledgeAlert(alert._id)">
+                        Ack
+                      </button>
+                    }
+                    @if (authService.isAdmin()) {
+                      <button class="btn btn-sm btn-danger"
+                        (click)="deleteAlert(alert._id)">
+                        Delete
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="p-3 mb-0 text-muted">No alerts found.</p>
+        }
+      </div>
+    </div>
+
+  } @else if (!errorMessage) {
+    <div class="text-center py-5">
+      <div class="spinner-border" role="status"></div>
+      <p class="mt-2 text-muted">Loading user...</p>
+    </div>
+  }
+
+</div>

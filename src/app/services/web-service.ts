@@ -40,7 +40,7 @@ export class WebService {
 
   searchUsersByName(firstName: string, lastName: string) {
     return this.http.get<any>(
-      this.baseUrl + '/users/search/name?first_name=' + firstName + '&last_name=' + lastName,
+      this.baseUrl + '/users/search?first_name=' + firstName + '&last_name=' + lastName,
       { headers: this.getHeaders() }
     );
   }
@@ -71,6 +71,58 @@ export class WebService {
   deleteUser(id: string) {
     return this.http.delete<any>(
       this.baseUrl + '/users/' + id,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // --- USER SUB-RESOURCES ---
+  getUserUsageLogs(userId: string, page: number, pageSize: number = 5) {
+    return this.http.get<any>(
+      this.baseUrl + '/users/' + userId + '/usage?pn=' + page + '&ps=' + pageSize,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getUserApiKeys(userId: string) {
+    return this.http.get<any>(
+      this.baseUrl + '/users/' + userId + '/api-keys',
+      { headers: this.getHeaders() }
+    );
+  }
+
+  revokeApiKey(userId: string, keyId: string) {
+    return this.http.put<any>(
+      this.baseUrl + '/users/' + userId + '/api-keys/' + keyId + '/revoke',
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
+
+  deleteApiKey(userId: string, keyId: string) {
+    return this.http.delete<any>(
+      this.baseUrl + '/users/' + userId + '/api-keys/' + keyId,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getUserAlerts(userId: string) {
+    return this.http.get<any>(
+      this.baseUrl + '/users/' + userId + '/alerts',
+      { headers: this.getHeaders() }
+    );
+  }
+
+  acknowledgeAlert(userId: string, alertId: string) {
+    return this.http.put<any>(
+      this.baseUrl + '/users/' + userId + '/alerts/' + alertId + '/acknowledge',
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
+
+  deleteAlert(userId: string, alertId: string) {
+    return this.http.delete<any>(
+      this.baseUrl + '/users/' + userId + '/alerts/' + alertId,
       { headers: this.getHeaders() }
     );
   }
@@ -109,6 +161,67 @@ export class WebService {
     return this.http.post<any>(
       this.baseUrl + '/anomaly-flags/' + id + '/resolve',
       { note: note },
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // --- ACTIVITY LOGS ---
+  getActivityLogsFiltered(relativeUrl: string) {
+    return this.http.get<any>(
+      this.baseUrl + relativeUrl,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  addActivityLog(data: any) {
+    return this.http.post<any>(
+      this.baseUrl + '/activity-logs',
+      data,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  updateActivityLog(id: string, data: any) {
+    return this.http.put<any>(
+      this.baseUrl + '/activity-logs/' + id,
+      data,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  deleteActivityLog(id: string) {
+    return this.http.delete<any>(
+      this.baseUrl + '/activity-logs/' + id,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // --- ANOMALY FLAGS ---
+  getAnomalyFlagsFiltered(relativeUrl: string) {
+    return this.http.get<any>(
+      this.baseUrl + relativeUrl,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  updateAnomalyFlag(id: string, data: any) {
+    return this.http.put<any>(
+      this.baseUrl + '/anomaly-flags/' + id,
+      data,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  deleteAnomalyFlag(id: string) {
+    return this.http.delete<any>(
+      this.baseUrl + '/anomaly-flags/' + id,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  deleteResolutionLog(flagId: string, resId: string) {
+    return this.http.delete<any>(
+      this.baseUrl + '/anomaly-flags/' + flagId + '/resolve/' + resId,
       { headers: this.getHeaders() }
     );
   }
