@@ -142,4 +142,11 @@ export class WebService {
     );
   }
 
+  getUserRiskReport() {
+    return this.http.get<any>(
+      this.baseUrl + '/analytics/user-risk-report',
+      { headers: this.getHeaders() }
+    );
+  }
+
 }
