@@ -20,16 +20,14 @@ export class LoginComponent {
               private router: Router) { }
 
   ngOnInit() {
-    // If already logged in, skip the login page
-    if (localStorage.getItem('token')) {
-      this.router.navigate(['/dashboard']);
-      return;
-    }
-
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
+
+    if (localStorage.getItem('token')) {
+      this.router.navigate(['/dashboard']);
+    }
   }
 
   onSubmit() {
