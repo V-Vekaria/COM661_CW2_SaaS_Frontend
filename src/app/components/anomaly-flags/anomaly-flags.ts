@@ -16,6 +16,7 @@ export class AnomalyFlags {
   total: number = 0;
   page: number = 1;
   pageSize: number = 10;
+  isLoading: boolean = false;
   errorMessage: string = '';
   successMessage: string = '';
 
@@ -42,6 +43,7 @@ export class AnomalyFlags {
   }
 
   loadFlags() {
+    this.isLoading = true;
     this.errorMessage = '';
     let url = '/anomaly-flags?pn=' + this.page + '&ps=' + this.pageSize;
     if (this.filterSeverity) url += '&severity=' + this.filterSeverity;
@@ -52,8 +54,12 @@ export class AnomalyFlags {
       next: (data) => {
         this.flags = data.flags || [];
         this.total = data.total || 0;
+        this.isLoading = false;
       },
-      error: () => { this.errorMessage = 'Failed to load anomaly flags'; }
+      error: () => {
+        this.errorMessage = 'Failed to load anomaly flags';
+        this.isLoading = false;
+      }
     });
   }
 

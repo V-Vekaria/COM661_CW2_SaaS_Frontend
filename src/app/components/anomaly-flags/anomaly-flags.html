@@ -57,8 +57,16 @@
     </div>
   </div>
 
+  <!-- loading spinner -->
+  @if (isLoading) {
+    <div class="text-center py-5">
+      <div class="spinner-border" role="status"></div>
+      <p class="mt-2 text-muted">Loading flags...</p>
+    </div>
+  }
+
   <!-- flags table -->
-  @if (flags.length > 0) {
+  @if (!isLoading && flags.length > 0) {
     <div class="card mb-3">
       <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0">
