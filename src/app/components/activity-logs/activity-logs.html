@@ -2,11 +2,92 @@
 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Activity Logs</h2>
-    <span class="badge bg-secondary fs-6">{{ total }} total</span>
+    <div class="d-flex align-items-center gap-3">
+      <span class="badge bg-secondary fs-6">{{ total }} total</span>
+      <button class="btn btn-sm btn-dark" (click)="toggleAddForm()">
+        {{ showAddForm ? 'Cancel' : '+ Log Activity' }}
+      </button>
+    </div>
   </div>
 
   @if (errorMessage) {
     <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert alert-success">{{ successMessage }}</div>
+  }
+
+  <!-- add log form -->
+  @if (showAddForm) {
+    <div class="card mb-3">
+      <div class="card-header bg-dark text-white">New Activity Log</div>
+      <div class="card-body">
+        <form [formGroup]="addLogForm" (ngSubmit)="onAddLog()">
+          <div class="row g-2">
+            <div class="col-md-3">
+              <label class="form-label small">User ID *</label>
+              <input type="text" class="form-control form-control-sm" formControlName="user_id"
+                placeholder="MongoDB ObjectId">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">User Email</label>
+              <input type="text" class="form-control form-control-sm" formControlName="user_email">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">Action Type *</label>
+              <select class="form-select form-select-sm" formControlName="action_type">
+                <option value="login">login</option>
+                <option value="logout">logout</option>
+                <option value="create">create</option>
+                <option value="update">update</option>
+                <option value="delete">delete</option>
+                <option value="upload">upload</option>
+                <option value="download">download</option>
+                <option value="failed_login">failed_login</option>
+                <option value="password_reset">password_reset</option>
+                <option value="api_key_generate">api_key_generate</option>
+                <option value="billing_view">billing_view</option>
+                <option value="report_generate">report_generate</option>
+                <option value="settings_update">settings_update</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">Region</label>
+              <select class="form-select form-select-sm" formControlName="region">
+                <option value="eu-west">eu-west</option>
+                <option value="us-east">us-east</option>
+                <option value="us-west">us-west</option>
+                <option value="ap-south">ap-south</option>
+                <option value="ap-northeast">ap-northeast</option>
+                <option value="sa-east">sa-east</option>
+                <option value="af-south">af-south</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">Device Type</label>
+              <select class="form-select form-select-sm" formControlName="device_type">
+                <option value="desktop">desktop</option>
+                <option value="mobile">mobile</option>
+                <option value="tablet">tablet</option>
+                <option value="api">api</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">Status Code *</label>
+              <input type="number" class="form-control form-control-sm" formControlName="status_code"
+                min="100" max="599">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">Response Time (ms) *</label>
+              <input type="number" class="form-control form-control-sm" formControlName="response_time_ms" min="0">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-sm btn-dark mt-3" [disabled]="addLogForm.invalid">
+            Create Log
+          </button>
+        </form>
+      </div>
+    </div>
   }
 
   <!-- filters -->
@@ -23,6 +104,7 @@
             <option value="update">update</option>
             <option value="delete">delete</option>
             <option value="download">download</option>
+            <option value="failed_login">failed_login</option>
             <option value="password_reset">password_reset</option>
             <option value="api_key_generate">api_key_generate</option>
             <option value="settings_update">settings_update</option>
@@ -35,7 +117,7 @@
             <option value="eu-west">eu-west</option>
             <option value="us-east">us-east</option>
             <option value="us-west">us-west</option>
-            <option value="ap-southeast">ap-southeast</option>
+            <option value="ap-south">ap-south</option>
             <option value="ap-northeast">ap-northeast</option>
             <option value="sa-east">sa-east</option>
             <option value="af-south">af-south</option>
@@ -59,8 +141,16 @@
     </div>
   </div>
 
+  <!-- loading spinner -->
+  @if (isLoading) {
+    <div class="text-center py-5">
+      <div class="spinner-border" role="status"></div>
+      <p class="mt-2 text-muted">Loading logs...</p>
+    </div>
+  }
+
   <!-- table -->
-  @if (logs.length > 0) {
+  @if (!isLoading && logs.length > 0) {
     <div class="card mb-3">
       <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0">
@@ -149,7 +239,7 @@
       </button>
     </div>
 
-  } @else {
+  } @else if (!isLoading) {
     <div class="alert alert-warning">No logs found for current filters.</div>
   }
 
