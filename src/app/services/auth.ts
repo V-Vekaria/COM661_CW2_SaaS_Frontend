@@ -25,6 +25,10 @@ export class AuthService {
   }
 
   logout() {
+    this.webService.logout().subscribe({
+      next: () => {},
+      error: () => {}
+    });
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('email');
@@ -43,20 +47,16 @@ export class AuthService {
     return this.getRole() === 'admin';
   }
 
-  isModerator(): boolean {
-    return this.getRole() === 'moderator';
-  }
-
   isAnalyst(): boolean {
     return this.getRole() === 'analyst';
   }
 
   canViewUsers(): boolean {
-    return this.isAdmin() || this.isModerator();
+    return this.isAdmin() || this.isAnalyst();
   }
 
   canViewAnomalies(): boolean {
-    return this.isAdmin() || this.isModerator();
+    return this.isAdmin() || this.isAnalyst();
   }
 
   canViewAnalytics(): boolean {
