@@ -21,9 +21,14 @@
           {{ userData.profile?.first_name }} {{ userData.profile?.last_name }}
         </span>
         @if (authService.isAdmin()) {
-          <button class="btn btn-sm btn-outline-light" (click)="toggleEditForm()">
-            {{ showEditForm ? 'Cancel' : 'Edit' }}
-          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-light" (click)="toggleEditForm()">
+              {{ showEditForm ? 'Cancel' : 'Edit' }}
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="deleteUser()">
+              Delete User
+            </button>
+          </div>
         }
       </div>
       <div class="card-body">
@@ -31,7 +36,7 @@
           <div class="col-md-6">
             <p><strong>Email:</strong> {{ userData.profile?.email }}</p>
             <p><strong>Role:</strong> {{ userData.profile?.role }}</p>
-            <p><strong>Created:</strong> {{ userData.profile?.created_at }}</p>
+            <p><strong>Created:</strong> {{ userData.profile?.created_at | slice:0:10 }}</p>
             <p><strong>Last Login:</strong> {{ userData.profile?.last_login }}</p>
           </div>
           <div class="col-md-6">
@@ -98,10 +103,61 @@
 
     <!-- usage logs -->
     <div class="card mb-4">
-      <div class="card-header bg-dark text-white">
-        Usage Logs
-        <span class="badge bg-secondary ms-2">{{ usageTotal }}</span>
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span>Usage Logs <span class="badge bg-secondary ms-2">{{ usageTotal }}</span></span>
+        @if (authService.isAdmin()) {
+          <button class="btn btn-sm btn-outline-light" (click)="toggleAddUsageForm()">
+            {{ showAddUsageForm ? 'Cancel' : '+ Add Log' }}
+          </button>
+        }
       </div>
+
+      @if (showAddUsageForm) {
+        <div class="card-body border-bottom">
+          <form [formGroup]="addUsageForm" (ngSubmit)="onAddUsageLog()">
+            <div class="row g-2">
+              <div class="col-md-2">
+                <label class="form-label small">API Calls *</label>
+                <input type="number" class="form-control form-control-sm" formControlName="api_calls" min="1">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small">Storage (MB) *</label>
+                <input type="number" class="form-control form-control-sm" formControlName="storage_mb" min="0">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Region</label>
+                <select class="form-select form-select-sm" formControlName="region">
+                  <option value="eu-west">eu-west</option>
+                  <option value="us-east">us-east</option>
+                  <option value="us-west">us-west</option>
+                  <option value="ap-south">ap-south</option>
+                  <option value="ap-northeast">ap-northeast</option>
+                  <option value="sa-east">sa-east</option>
+                  <option value="af-south">af-south</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small">Method</label>
+                <select class="form-select form-select-sm" formControlName="method">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                  <option value="PATCH">PATCH</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Endpoint</label>
+                <input type="text" class="form-control form-control-sm" formControlName="endpoint">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-dark mt-2" [disabled]="addUsageForm.invalid">
+              Add Log
+            </button>
+          </form>
+        </div>
+      }
+
       <div class="card-body p-0">
         @if (usageLogs.length > 0) {
           <table class="table table-sm table-hover mb-0">
@@ -112,25 +168,27 @@
                 <th>Storage (MB)</th>
                 <th>Region</th>
                 <th>Method</th>
-                <th>Status</th>
+                @if (authService.isAdmin()) {
+                  <th></th>
+                }
               </tr>
             </thead>
             <tbody>
               @for (log of usageLogs; track log._id) {
                 <tr>
-                  <td>{{ log.timestamp }}</td>
+                  <td>{{ log.timestamp | slice:0:10 }}</td>
                   <td>{{ log.metrics?.api_calls }}</td>
                   <td>{{ log.metrics?.storage_mb }}</td>
                   <td>{{ log.request?.region }}</td>
                   <td><code>{{ log.request?.method }}</code></td>
-                  <td>
-                    <span class="badge"
-                      [class.bg-success]="log.request?.status_code < 300"
-                      [class.bg-warning]="log.request?.status_code >= 300 && log.request?.status_code < 500"
-                      [class.bg-danger]="log.request?.status_code >= 500">
-                      {{ log.request?.status_code }}
-                    </span>
-                  </td>
+                  @if (authService.isAdmin()) {
+                    <td>
+                      <button class="btn btn-sm btn-outline-danger"
+                        (click)="deleteUsageLog(log._id)">
+                        &times;
+                      </button>
+                    </td>
+                  }
                 </tr>
               }
             </tbody>
@@ -155,10 +213,35 @@
 
     <!-- api keys -->
     <div class="card mb-4">
-      <div class="card-header bg-dark text-white">
-        API Keys
-        <span class="badge bg-secondary ms-2">{{ apiKeys.length }}</span>
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span>API Keys <span class="badge bg-secondary ms-2">{{ apiKeys.length }}</span></span>
+        @if (authService.isAdmin()) {
+          <button class="btn btn-sm btn-outline-light" (click)="toggleAddKeyForm()">
+            {{ showAddKeyForm ? 'Cancel' : '+ Add Key' }}
+          </button>
+        }
       </div>
+
+      @if (showAddKeyForm) {
+        <div class="card-body border-bottom">
+          <p class="mb-2 small fw-semibold">Select Permissions:</p>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            @for (perm of availablePermissions; track perm) {
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox"
+                  [id]="'perm_' + perm"
+                  [checked]="selectedPermissions.includes(perm)"
+                  (change)="togglePermission(perm)">
+                <label class="form-check-label" [for]="'perm_' + perm">{{ perm }}</label>
+              </div>
+            }
+          </div>
+          <button class="btn btn-sm btn-dark" (click)="onAddApiKey()">
+            Generate Key
+          </button>
+        </div>
+      }
+
       <div class="card-body p-0">
         @if (apiKeys.length > 0) {
           <table class="table table-sm table-hover mb-0">
@@ -166,7 +249,7 @@
               <tr>
                 <th>Key Prefix</th>
                 <th>Permissions</th>
-                <th>Last Used</th>
+                <th>Created</th>
                 <th>Status</th>
                 @if (authService.isAdmin()) {
                   <th>Actions</th>
@@ -182,7 +265,7 @@
                       <span class="badge bg-info text-dark me-1">{{ p }}</span>
                     }
                   </td>
-                  <td>{{ key.last_used }}</td>
+                  <td>{{ key.created_at | slice:0:10 }}</td>
                   <td>
                     @if (key.revoked) {
                       <span class="badge bg-danger">Revoked</span>
@@ -216,10 +299,49 @@
 
     <!-- alerts -->
     <div class="card mb-4">
-      <div class="card-header bg-dark text-white">
-        Alerts
-        <span class="badge bg-secondary ms-2">{{ alerts.length }}</span>
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span>Alerts <span class="badge bg-secondary ms-2">{{ alerts.length }}</span></span>
+        @if (authService.isAdmin()) {
+          <button class="btn btn-sm btn-outline-light" (click)="toggleAddAlertForm()">
+            {{ showAddAlertForm ? 'Cancel' : '+ Add Alert' }}
+          </button>
+        }
       </div>
+
+      @if (showAddAlertForm) {
+        <div class="card-body border-bottom">
+          <form [formGroup]="addAlertForm" (ngSubmit)="onAddAlert()">
+            <div class="row g-2">
+              <div class="col-md-5">
+                <label class="form-label small">Message *</label>
+                <input type="text" class="form-control form-control-sm" formControlName="message">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Severity</label>
+                <select class="form-select form-select-sm" formControlName="severity">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Alert Type</label>
+                <select class="form-select form-select-sm" formControlName="alert_type">
+                  <option value="threshold_breach">Threshold Breach</option>
+                  <option value="security_event">Security Event</option>
+                  <option value="billing_alert">Billing Alert</option>
+                  <option value="performance_degradation">Performance Degradation</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-dark mt-2" [disabled]="addAlertForm.invalid">
+              Create Alert
+            </button>
+          </form>
+        </div>
+      }
+
       <div class="card-body p-0">
         @if (alerts.length > 0) {
           <table class="table table-sm table-hover mb-0">
@@ -243,7 +365,7 @@
                       {{ alert.severity }}
                     </span>
                   </td>
-                  <td>{{ alert.triggered_at }}</td>
+                  <td>{{ alert.triggered_at | slice:0:10 }}</td>
                   <td>
                     @if (alert.acknowledged) {
                       <span class="badge bg-success">Acknowledged</span>
