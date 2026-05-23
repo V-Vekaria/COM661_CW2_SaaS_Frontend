@@ -49,6 +49,7 @@ export class Analytics implements OnInit {
     this.loadFailedLogins();
     this.loadAnomalySummary();
     this.loadRiskReport();
+    this.loadOpsBreakdown();
   }
 
   loadTierData() {
@@ -67,29 +68,37 @@ export class Analytics implements OnInit {
             backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#dc3545']
           }]
         };
+      },
+      error: () => { this.errorMessage = 'Failed to load tier analytics'; }
+    });
+  }
 
+  loadOpsBreakdown() {
+    this.webService.getOpsBreakdown().subscribe({
+      next: (data: any[]) => {
+        const labels = data.map((d: any) => (d.tier || d._id || '').toUpperCase());
         this.opsChartData = {
           labels,
           datasets: [
             {
-              data: avgCalls.map((v: number) => Math.round(v * 0.6)),
+              data: data.map((d: any) => d.total_reads ?? 0),
               label: 'Read Ops',
               backgroundColor: '#0d6efd'
             },
             {
-              data: avgCalls.map((v: number) => Math.round(v * 0.3)),
+              data: data.map((d: any) => d.total_writes ?? 0),
               label: 'Write Ops',
               backgroundColor: '#198754'
             },
             {
-              data: avgCalls.map((v: number) => Math.round(v * 0.1)),
-              label: 'Delete Ops',
+              data: data.map((d: any) => Math.max(0, (d.total_calls ?? 0) - (d.total_reads ?? 0) - (d.total_writes ?? 0))),
+              label: 'Other Ops',
               backgroundColor: '#dc3545'
             }
           ]
         };
       },
-      error: () => { this.errorMessage = 'Failed to load tier analytics'; }
+      error: () => {}
     });
   }
 

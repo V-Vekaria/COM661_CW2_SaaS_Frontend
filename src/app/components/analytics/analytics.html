@@ -115,10 +115,10 @@
             <table class="table table-sm table-hover mb-0">
               <thead><tr><th>Email</th><th>Failed Attempts</th></tr></thead>
               <tbody>
-                @for (f of failedLogins; track f._id) {
+                @for (f of failedLogins; track f.user_id) {
                   <tr>
-                    <td>{{ f._id }}</td>
-                    <td><span class="badge bg-danger">{{ f.failed_attempts }}</span></td>
+                    <td>{{ f.user_email }}</td>
+                    <td><span class="badge bg-danger">{{ f.failed_count }}</span></td>
                   </tr>
                 }
               </tbody>
