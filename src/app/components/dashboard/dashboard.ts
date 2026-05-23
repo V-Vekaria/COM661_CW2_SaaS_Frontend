@@ -56,20 +56,36 @@ export class Dashboard {
   constructor(private webService: WebService) { }
 
   ngOnInit() {
-    this.loadUsers();
+    this.loadSummary();
     this.loadAnomalies();
     this.loadActivity();
+    this.loadTierChart();
   }
 
-  loadUsers() {
-    this.webService.getUsers(1, 100).subscribe(
-      (response) => {
-        this.totalUsers = response.total;
-        this.buildTierChart(response.users);
+  loadSummary() {
+    this.webService.getDashboardSummary().subscribe(
+      (data) => {
+        this.totalUsers = data.total_users;
+        this.activeAnomalies = data.open_anomalies;
       },
-      (error) => {
-        this.errorMessage = 'Failed to load users';
-      }
+      () => { this.errorMessage = 'Failed to load dashboard summary'; }
+    );
+  }
+
+  loadTierChart() {
+    this.webService.getAvgApiCallsByTier().subscribe(
+      (data: any[]) => {
+        const labels = data.map((d: any) => (d.tier || d._id || '').toUpperCase());
+        const values = data.map((d: any) => Math.round(d.avg_api_calls ?? 0));
+        this.pieChartData = {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: ['#0d6efd', '#198754', '#ffc107']
+          }]
+        };
+      },
+      () => {}
     );
   }
 
@@ -77,7 +93,6 @@ export class Dashboard {
     this.webService.getAnomalyFlags(1, 100).subscribe(
       (response) => {
         const flags = response.flags;
-        this.activeAnomalies = flags.filter((a: any) => !a.resolved).length;
         this.recentAnomalies = flags.slice(0, 5);
         this.buildSeverityChart(flags);
       },
@@ -88,10 +103,10 @@ export class Dashboard {
   }
 
   loadActivity() {
-    this.webService.getActivityLogs(1, 100).subscribe(
+    this.webService.getActivityLogs(1, 50).subscribe(
       (response) => {
-        const logs = response.logs;
         this.totalApiCalls = response.total;
+        const logs = response.logs;
         if (logs.length > 0) {
           let sum = 0;
           for (let log of logs) {
@@ -100,27 +115,8 @@ export class Dashboard {
           this.avgResponseTime = Math.round(sum / logs.length);
         }
       },
-      (error) => {
-        this.errorMessage = 'Failed to load activity logs';
-      }
+      () => {}
     );
-  }
-
-  buildTierChart(users: any[]) {
-    const tiers: any = { free: 0, pro: 0, enterprise: 0 };
-    for (let u of users) {
-      const tier = u.subscription?.tier || 'free';
-      if (tiers[tier] !== undefined) {
-        tiers[tier]++;
-      }
-    }
-    this.pieChartData = {
-      labels: ['Free', 'Pro', 'Enterprise'],
-      datasets: [{
-        data: [tiers.free, tiers.pro, tiers.enterprise],
-        backgroundColor: ['#0d6efd', '#198754', '#ffc107']
-      }]
-    };
   }
 
   buildSeverityChart(flags: any[]) {
