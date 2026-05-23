@@ -23,6 +23,22 @@ export class WebService {
     });
   }
 
+  logout() {
+    return this.http.post<any>(
+      this.baseUrl + '/logout',
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // --- DASHBOARD ---
+  getDashboardSummary() {
+    return this.http.get<any>(
+      this.baseUrl + '/dashboard/summary',
+      { headers: this.getHeaders() }
+    );
+  }
+
   // --- USERS ---
   getUsers(page: number, pageSize: number = 10) {
     return this.http.get<any>(
@@ -34,13 +50,6 @@ export class WebService {
   getUserById(id: string) {
     return this.http.get<any>(
       this.baseUrl + '/users/' + id,
-      { headers: this.getHeaders() }
-    );
-  }
-
-  searchUsersByName(firstName: string, lastName: string) {
-    return this.http.get<any>(
-      this.baseUrl + '/users/search?first_name=' + firstName + '&last_name=' + lastName,
       { headers: this.getHeaders() }
     );
   }
@@ -83,9 +92,32 @@ export class WebService {
     );
   }
 
+  addUsageLog(userId: string, data: any) {
+    return this.http.post<any>(
+      this.baseUrl + '/users/' + userId + '/usage',
+      data,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  deleteUsageLog(userId: string, logId: string) {
+    return this.http.delete<any>(
+      this.baseUrl + '/users/' + userId + '/usage/' + logId,
+      { headers: this.getHeaders() }
+    );
+  }
+
   getUserApiKeys(userId: string) {
     return this.http.get<any>(
       this.baseUrl + '/users/' + userId + '/api-keys',
+      { headers: this.getHeaders() }
+    );
+  }
+
+  addApiKey(userId: string, data: any) {
+    return this.http.post<any>(
+      this.baseUrl + '/users/' + userId + '/api-keys',
+      data,
       { headers: this.getHeaders() }
     );
   }
@@ -108,6 +140,14 @@ export class WebService {
   getUserAlerts(userId: string) {
     return this.http.get<any>(
       this.baseUrl + '/users/' + userId + '/alerts',
+      { headers: this.getHeaders() }
+    );
+  }
+
+  addAlert(userId: string, data: any) {
+    return this.http.post<any>(
+      this.baseUrl + '/users/' + userId + '/alerts',
+      data,
       { headers: this.getHeaders() }
     );
   }
@@ -181,14 +221,6 @@ export class WebService {
     );
   }
 
-  updateActivityLog(id: string, data: any) {
-    return this.http.put<any>(
-      this.baseUrl + '/activity-logs/' + id,
-      data,
-      { headers: this.getHeaders() }
-    );
-  }
-
   deleteActivityLog(id: string) {
     return this.http.delete<any>(
       this.baseUrl + '/activity-logs/' + id,
@@ -230,6 +262,13 @@ export class WebService {
   getAvgApiCallsByTier() {
     return this.http.get<any>(
       this.baseUrl + '/analytics/avg-api-calls-by-tier',
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getOpsBreakdown() {
+    return this.http.get<any>(
+      this.baseUrl + '/analytics/ops-breakdown',
       { headers: this.getHeaders() }
     );
   }
