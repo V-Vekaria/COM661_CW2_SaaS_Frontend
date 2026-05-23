@@ -17,8 +17,8 @@ export class Users {
   total: number = 0;
   page: number = 1;
   pageSize: number = 10;
-  searchFirstName: string = '';
-  searchLastName: string = '';
+  searchQuery: string = '';
+  isLoading: boolean = false;
   errorMessage: string = '';
 
   showAddForm: boolean = false;
@@ -31,84 +31,72 @@ export class Users {
               public authService: AuthService) { }
 
   ngOnInit() {
-    this.loadUsers();
     this.addUserForm = this.fb.group({
       first_name: ['', Validators.required],
-      last_name: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      role: ['analyst', Validators.required],
-      tier: ['free', Validators.required]
+      last_name:  ['', Validators.required],
+      email:      ['', [Validators.required, Validators.email]],
+      password:   ['', [Validators.required, Validators.minLength(6)]],
+      role:       ['analyst', Validators.required],
+      tier:       ['free', Validators.required]
     });
+    this.loadUsers();
   }
 
   loadUsers() {
-    this.webService.getUsers(this.page, this.pageSize).subscribe(
-      (response) => {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.webService.getUsers(this.page, this.pageSize).subscribe({
+      next: (response) => {
         this.user_list = response.users;
         this.total = response.total;
+        this.isLoading = false;
       },
-      (error) => {
+      error: () => {
         this.errorMessage = 'Failed to load users';
+        this.isLoading = false;
       }
-    );
+    });
   }
 
-  totalPages() {
-    return Math.ceil(this.total / this.pageSize);
-  }
+  totalPages() { return Math.ceil(this.total / this.pageSize); }
 
   nextPage() {
-    if (this.page < this.totalPages()) {
-      this.page = this.page + 1;
-      this.loadUsers();
-    }
+    if (this.page < this.totalPages()) { this.page++; this.loadUsers(); }
   }
 
   previousPage() {
-    if (this.page > 1) {
-      this.page = this.page - 1;
-      this.loadUsers();
-    }
+    if (this.page > 1) { this.page--; this.loadUsers(); }
   }
 
   searchByName() {
-    if (!this.searchFirstName && !this.searchLastName) {
-      this.loadUsers();
-      return;
-    }
-    this.webService.searchUsersByName(
-      this.searchFirstName,
-      this.searchLastName
-    ).subscribe(
-      (response) => {
+    if (!this.searchQuery.trim()) { this.loadUsers(); return; }
+    this.isLoading = true;
+    this.webService.searchUsers(this.searchQuery.trim()).subscribe({
+      next: (response) => {
         this.user_list = response.users || response;
-        this.total = response.count || response.length || 0;
+        this.total = response.count || response.total || this.user_list.length;
+        this.isLoading = false;
       },
-      (error) => {
+      error: () => {
         this.user_list = [];
         this.errorMessage = 'No users found';
+        this.isLoading = false;
       }
-    );
+    });
   }
 
   clearSearch() {
-    this.searchFirstName = '';
-    this.searchLastName = '';
+    this.searchQuery = '';
     this.page = 1;
     this.loadUsers();
   }
 
   deleteUser(id: string) {
     if (confirm('Are you sure you want to delete this user?')) {
-      this.webService.deleteUser(id).subscribe(
-        () => {
-          this.loadUsers();
-        },
-        (error) => {
-          alert('Failed to delete user');
-        }
-      );
+      this.webService.deleteUser(id).subscribe({
+        next: () => { this.loadUsers(); },
+        error: () => { alert('Failed to delete user'); }
+      });
     }
   }
 
@@ -122,32 +110,24 @@ export class Users {
   onAddUser() {
     if (this.addUserForm.valid) {
       const newUser = {
-        first_name: this.addUserForm.value.first_name,
-        last_name: this.addUserForm.value.last_name,
-        email: this.addUserForm.value.email,
-        password: this.addUserForm.value.password,
-        role: this.addUserForm.value.role,
+        first_name:        this.addUserForm.value.first_name,
+        last_name:         this.addUserForm.value.last_name,
+        email:             this.addUserForm.value.email,
+        password:          this.addUserForm.value.password,
+        role:              this.addUserForm.value.role,
         subscription_tier: this.addUserForm.value.tier
       };
-
-      this.webService.addUser(newUser).subscribe(
-        (response) => {
+      this.webService.addUser(newUser).subscribe({
+        next: () => {
           this.addSuccess = 'User added successfully';
           this.addError = '';
           this.loadUsers();
-          setTimeout(() => {
-            this.toggleAddForm();
-          }, 1500);
+          setTimeout(() => { this.toggleAddForm(); }, 1500);
         },
-        (error) => {
-          if (error.status === 409) {
-            this.addError = 'Email already exists';
-          } else {
-            this.addError = 'Failed to add user';
-          }
+        error: (error) => {
+          this.addError = error.status === 409 ? 'Email already exists' : 'Failed to add user';
         }
-      );
+      });
     }
   }
-
 }

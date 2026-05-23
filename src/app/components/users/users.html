@@ -96,7 +96,7 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Role</label>
               <select class="form-select" formControlName="role">
-                <option value="user">User</option>
+                <option value="analyst">Analyst</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -126,34 +126,35 @@
   <div class="card mb-3">
     <div class="card-body">
       <div class="row g-2">
-        <div class="col-md-4">
+        <div class="col-md-8">
           <input type="text"
             class="form-control"
-            placeholder="Search first name"
-            [(ngModel)]="searchFirstName">
+            placeholder="Search by name or email..."
+            [(ngModel)]="searchQuery"
+            (keyup.enter)="searchByName()">
         </div>
         <div class="col-md-4">
-          <input type="text"
-            class="form-control"
-            placeholder="Search last name"
-            [(ngModel)]="searchLastName">
-        </div>
-        <div class="col-md-4">
-          <button class="btn btn-dark me-2"
-            (click)="searchByName()">
-            Search
-          </button>
-          <button class="btn btn-secondary"
-            (click)="clearSearch()">
-            Clear
-          </button>
+          <button class="btn btn-dark me-2" (click)="searchByName()">Search</button>
+          <button class="btn btn-secondary" (click)="clearSearch()">Clear</button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- loading spinner -->
+  @if (isLoading) {
+    <div class="text-center py-5">
+      <div class="spinner-border" role="status"></div>
+      <p class="mt-2 text-muted">Loading users...</p>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+
   <!-- users list -->
-  @if (user_list.length > 0) {
+  @if (!isLoading && user_list.length > 0) {
     <div class="row">
       @for (user of user_list; track user._id) {
         <div class="col-md-12 mb-3">
@@ -208,10 +209,8 @@
         </button>
     </div>
     </div>
-  } @else {
-    <div class="alert alert-warning">
-      No users found
-    </div>
+  } @else if (!isLoading) {
+    <div class="alert alert-warning">No users found.</div>
   }
 
 </div>
